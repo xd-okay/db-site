@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+
+# Production build output
+dist/
+
+# Logs & local overrides
+logs/
+*.log
+*.local
+
+# OS / Editor
+.DS_Store
+Thumbs.db
