@@ -33,9 +33,31 @@ const SQL_KEYWORDS = new Set([
   'NOT',
   'NULL',
   'INT',
+  'TEXT',
+  'BOOLEAN',
+  'TRUE',
+  'FALSE',
   'DELETE',
   'CREATE',
+  'DROP',
+  'SCHEMA',
+  'IF',
+  'EXISTS',
+  'CASCADE',
   'TABLE',
+  'PRIMARY',
+  'KEY',
+  'REFERENCES',
+  'GENERATED',
+  'ALWAYS',
+  'AS',
+  'IDENTITY',
+  'SHOW',
+  'WITH',
+  'RETURNING',
+  'ORDER',
+  'BY',
+  'COUNT',
 ]);
 
 interface Token {
@@ -59,7 +81,11 @@ function tokenizeLine(line: string): Token[] {
     if (line[i] === '-' && line[i + 1] === '-') {
       const rest = line.slice(i);
       const isErrorComment =
-        rest.includes('ERROR') || rest.includes('❌') || rest.includes('ABORTED');
+        rest.includes('ERROR') ||
+        rest.includes('DEADLOCK') ||
+        rest.includes('40001') ||
+        rest.includes('40P01') ||
+        rest.includes('UPDATE 0');
       tokens.push({
         type: isErrorComment ? 'error-comment' : 'comment',
         value: rest,
@@ -129,14 +155,14 @@ function tokenizeLine(line: string): Token[] {
 }
 
 const TOKEN_CLASSES: Record<Token['type'], string> = {
-  'tx-keyword': 'text-cyan-300 font-bold drop-shadow-[0_0_8px_rgba(34,211,238,0.35)]',
-  keyword: 'text-[#C084FC] font-semibold',
-  string: 'text-[#FBBF24]',
-  number: 'text-[#34D399] font-medium',
-  operator: 'text-sky-400/90',
-  comment: 'text-slate-400/80 italic',
-  'error-comment': 'text-rose-400 font-semibold not-italic',
-  plain: 'text-slate-100',
+  'tx-keyword': 'text-blue-700 font-bold',
+  keyword: 'text-purple-700 font-semibold',
+  string: 'text-amber-700',
+  number: 'text-teal-700 font-medium',
+  operator: 'text-slate-600',
+  comment: 'text-slate-500 italic',
+  'error-comment': 'text-rose-600 font-semibold not-italic',
+  plain: 'text-slate-900',
 };
 
 export function renderHighlightedSqlLine(line: string): React.ReactNode {
@@ -147,4 +173,28 @@ export function renderHighlightedSqlLine(line: string): React.ReactNode {
       {token.value}
     </span>
   ));
+}
+
+export async function copyTextSafe(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // Fallback below
+  }
+  try {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-9999px';
+    document.body.appendChild(textarea);
+    textarea.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(textarea);
+    return ok;
+  } catch {
+    return false;
+  }
 }

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import { ShieldCheck, ShieldAlert, Check, Copy } from 'lucide-react';
-import { ISOLATION_LEVELS } from '../data/lessonData';
+import { ISOLATION_LEVELS } from '../data/examplesData';
+import { copyTextSafe } from '../utils/sqlHighlighter';
 
 export const IsolationTable: React.FC<{ projectorXL?: boolean }> = ({
   projectorXL = false,
@@ -12,19 +12,8 @@ export const IsolationTable: React.FC<{ projectorXL?: boolean }> = ({
   const snippet = 'SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;';
 
   const handleCopySnippet = async () => {
-    try {
-      await navigator.clipboard.writeText(snippet);
-      setCopiedSnippet(true);
-      setTimeout(() => setCopiedSnippet(false), 1600);
-    } catch {
-      const textarea = document.createElement('textarea');
-      textarea.value = snippet;
-      textarea.style.position = 'fixed';
-      textarea.style.left = '-9999px';
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
+    const ok = await copyTextSafe(snippet);
+    if (ok) {
       setCopiedSnippet(true);
       setTimeout(() => setCopiedSnippet(false), 1600);
     }
@@ -33,14 +22,14 @@ export const IsolationTable: React.FC<{ projectorXL?: boolean }> = ({
   const renderBadge = (prevented: boolean) => {
     if (prevented) {
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/12 border border-emerald-400/35 text-emerald-300 font-mono text-xs sm:text-sm font-semibold">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 font-mono text-xs sm:text-sm font-semibold">
           <ShieldCheck className="w-4 h-4 shrink-0" />
           PREVENTED
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-500/12 border border-rose-400/35 text-rose-300 font-mono text-xs sm:text-sm font-semibold">
+      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 font-mono text-xs sm:text-sm font-semibold">
         <ShieldAlert className="w-4 h-4 shrink-0" />
         POSSIBLE
       </span>
@@ -48,17 +37,17 @@ export const IsolationTable: React.FC<{ projectorXL?: boolean }> = ({
   };
 
   return (
-    <div className="space-y-5">
-      {/* Mode Switcher */}
+    <div className="space-y-4">
+      {/* Mode Switcher + 1-line snippet */}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="inline-flex p-1 rounded-xl bg-slate-900/90 border border-slate-800">
+        <div className="inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200">
           <button
             type="button"
             onClick={() => setMode('pg')}
-            className={`px-4 py-1.5 rounded-lg font-mono text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+            className={`px-4 py-1.5 rounded-lg font-mono text-xs sm:text-sm font-semibold transition-colors cursor-pointer ${
               mode === 'pg'
-                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 shadow-[0_0_16px_rgba(16,185,129,0.2)]'
-                : 'text-slate-400 hover:text-slate-200 border border-transparent'
+                ? 'bg-white text-slate-900 shadow-xs border border-slate-200'
+                : 'text-slate-600 hover:text-slate-900 border border-transparent'
             }`}
           >
             PostgreSQL Engine
@@ -66,29 +55,28 @@ export const IsolationTable: React.FC<{ projectorXL?: boolean }> = ({
           <button
             type="button"
             onClick={() => setMode('sqlStandard')}
-            className={`px-4 py-1.5 rounded-lg font-mono text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+            className={`px-4 py-1.5 rounded-lg font-mono text-xs sm:text-sm font-semibold transition-colors cursor-pointer ${
               mode === 'sqlStandard'
-                ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-400/40 shadow-[0_0_16px_rgba(34,211,238,0.2)]'
-                : 'text-slate-400 hover:text-slate-200 border border-transparent'
+                ? 'bg-white text-slate-900 shadow-xs border border-slate-200'
+                : 'text-slate-600 hover:text-slate-900 border border-transparent'
             }`}
           >
             SQL-92 Standard
           </button>
         </div>
 
-        {/* Copyable 1-line SQL syntax */}
         <button
           type="button"
           onClick={handleCopySnippet}
-          className="inline-flex items-center gap-2.5 px-4 py-2 rounded-xl bg-[#0b0f17] border border-slate-800 hover:border-cyan-400/40 font-mono text-xs sm:text-sm text-slate-200 transition-all cursor-pointer"
+          className="inline-flex items-center gap-2.5 px-4 py-2 rounded-xl bg-white border border-slate-200 hover:border-blue-300 shadow-xs font-mono text-xs sm:text-sm text-slate-800 transition-colors cursor-pointer"
         >
           <span>
-            <span className="text-purple-400 font-semibold">SET TRANSACTION</span>{' '}
-            <span className="text-slate-300">ISOLATION LEVEL</span>{' '}
-            <span className="text-cyan-300 font-semibold">REPEATABLE READ;</span>
+            <span className="text-purple-700 font-semibold">SET TRANSACTION</span>{' '}
+            <span className="text-slate-700">ISOLATION LEVEL</span>{' '}
+            <span className="text-blue-700 font-semibold">REPEATABLE READ;</span>
           </span>
           {copiedSnippet ? (
-            <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+            <Check className="w-4 h-4 text-emerald-600 shrink-0" />
           ) : (
             <Copy className="w-4 h-4 text-slate-400 shrink-0" />
           )}
@@ -96,72 +84,73 @@ export const IsolationTable: React.FC<{ projectorXL?: boolean }> = ({
       </div>
 
       {/* Cheat Sheet Matrix */}
-      <div className="rounded-2xl border border-slate-800/90 bg-[#0b0f17]/95 backdrop-blur-md overflow-hidden shadow-[0_0_50px_-15px_rgba(16,185,129,0.2)]">
+      <div className="rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-slate-800 bg-[#0f1522]">
-                <th className="py-4 px-5 sm:px-6 font-mono text-xs sm:text-sm uppercase tracking-wider text-slate-400">
+              <tr className="border-b border-slate-200 bg-slate-50">
+                <th className="py-3.5 px-5 font-mono text-xs sm:text-sm uppercase tracking-wider text-slate-600">
                   Isolation Level
                 </th>
-                <th className="py-4 px-5 font-mono text-xs sm:text-sm uppercase tracking-wider text-slate-400">
+                <th className="py-3.5 px-5 font-mono text-xs sm:text-sm uppercase tracking-wider text-slate-600">
                   Dirty Read
                 </th>
-                <th className="py-4 px-5 font-mono text-xs sm:text-sm uppercase tracking-wider text-slate-400">
+                <th className="py-3.5 px-5 font-mono text-xs sm:text-sm uppercase tracking-wider text-slate-600">
                   Phantom Read
                 </th>
-                <th className="py-4 px-5 font-mono text-xs sm:text-sm uppercase tracking-wider text-slate-400">
+                <th className="py-3.5 px-5 font-mono text-xs sm:text-sm uppercase tracking-wider text-slate-600">
                   Lost Update
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/80">
-              {ISOLATION_LEVELS.map((row, idx) => {
+            <tbody className="divide-y divide-slate-200">
+              {ISOLATION_LEVELS.map((row) => {
                 const status = mode === 'pg' ? row.pg : row.sqlStandard;
                 return (
-                  <motion.tr
+                  <tr
                     key={row.level}
-                    initial={{ opacity: 0, y: 8 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: idx * 0.06 }}
-                    className={`transition-colors ${
+                    className={
                       row.isDefault
-                        ? 'bg-emerald-500/[0.04] hover:bg-emerald-500/[0.08]'
-                        : 'hover:bg-white/[0.02]'
-                    }`}
+                        ? 'bg-blue-50/40'
+                        : 'hover:bg-slate-50/70'
+                    }
                   >
-                    <td className="py-5 px-5 sm:px-6">
-                      <div className="flex flex-wrap items-center gap-2.5">
+                    <td className="py-4 px-5">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span
-                          className={`font-mono font-bold tracking-tight text-white ${
-                            projectorXL ? 'text-lg sm:text-xl' : 'text-base sm:text-lg'
+                          className={`font-mono font-bold text-slate-900 ${
+                            projectorXL ? 'text-lg sm:text-xl' : 'text-sm sm:text-base'
                           }`}
                         >
                           {row.level}
                         </span>
                         {row.isDefault && (
-                          <span className="px-2 py-0.5 rounded-md text-[11px] font-mono font-bold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-blue-100 text-blue-800 border border-blue-200">
                             DEFAULT
                           </span>
                         )}
                       </div>
                       {mode === 'pg' && (
-                        <div className="text-xs font-mono text-slate-500 mt-1">
+                        <div className="text-xs font-mono text-slate-500 mt-0.5">
                           {row.pgNote}
                         </div>
                       )}
                     </td>
-
-                    <td className="py-5 px-5">{renderBadge(status.dirtyRead)}</td>
-                    <td className="py-5 px-5">{renderBadge(status.phantomRead)}</td>
-                    <td className="py-5 px-5">{renderBadge(status.lostUpdate)}</td>
-                  </motion.tr>
+                    <td className="py-4 px-5">{renderBadge(status.dirtyRead)}</td>
+                    <td className="py-4 px-5">{renderBadge(status.phantomRead)}</td>
+                    <td className="py-4 px-5">{renderBadge(status.lostUpdate)}</td>
+                  </tr>
                 );
               })}
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Tiny useful PDF tip */}
+      <div className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 font-mono text-xs sm:text-sm text-slate-700">
+        <span className="text-sky-800 font-bold mr-2">PG NOTE:</span>
+        PostgreSQL never permits dirty reads (even at READ UNCOMMITTED). Under REPEATABLE READ, phantom reads are also prevented.
       </div>
     </div>
   );
